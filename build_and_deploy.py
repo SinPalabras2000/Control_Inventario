@@ -35,7 +35,7 @@ def main():
     
     # Instalar dependencias
     print("📦 Instalando dependencias del frontend...")
-    run_command("npm install")
+    run_command("npm install --legacy-peer-deps")
     
     # Construir el frontend
     print("🔨 Construyendo el frontend...")

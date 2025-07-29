@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "cd frontend && npm install && npm run build && cd .. && python build_and_deploy.py"
+    "buildCommand": "cd frontend && npm install --legacy-peer-deps && npm run build && cd .. && python build_and_deploy.py"
   },
   "deploy": {
     "startCommand": "gunicorn --bind 0.0.0.0:$PORT app.app:app",
