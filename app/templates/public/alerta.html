@@ -1,0 +1,149 @@
+
+<!---Alerta que se dispara con JavaScript-->
+<div class="toast shadow-lg">
+    <div class="toast-content">
+        <i class="bi bi-check-circle-fill check"></i>
+        <div class="message">
+            <span class="text text-1 fw-bold">Felicitaciones</span>
+            <span class="text text-2"></span>
+        </div>
+    </div>
+    <button type="button" class="btn-close close" aria-label="Close"></button>
+    <div class="progress active"></div>
+</div>
+
+
+
+
+<!---Alerta que se dispara sin JavaScript-->
+{% if (tipo==1) %}
+<div id='alert' class="mi_alerta toast active shadow-lg">
+    <div class="toast-content">
+        <i class="bi bi-exclamation-circle-fill check"></i>
+        <div class="message">
+            <span class="text text-1 fw-bold">Atención</span>
+            <span class="text text-2">{{ msg }}</span>
+        </div>
+    </div>
+    <button type="button" class="btn-close close" aria-label="Close"></button>
+    <div class="progress active"></div>
+</div>
+{% endif %}
+
+<style>
+  .toast {
+    border-radius: 12px;
+    background: #fff;
+    position: fixed;
+    top: 25px;
+    right: 30px;
+    z-index: 9999;
+    border-left: 6px solid #4caf50;
+    padding: 10px;
+    overflow: hidden;
+    transform: translateX(calc(100% + 30px));
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.35);
+  }
+  
+  .toast.active {
+    transform: translateX(0%);
+  }
+  
+  .toast .toast-content {
+    display: flex;
+    align-items: center;
+  }
+  
+  .toast-content .check {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+    min-width: 35px;
+    background-color: #4caf50;
+    color: #fff;
+    font-size: 20px;
+    border-radius: 50%;
+  }
+  
+  .toast-content .message {
+    display: flex;
+    flex-direction: column;
+    margin: 0 20px;
+  }
+  
+  .message .text {
+    font-size: 16px;
+    font-weight: 400;
+    color: #666666;
+  }
+  
+  .message .text.text-1 {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .toast .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px;
+    cursor: pointer;
+    opacity: 0.7;
+  }
+  
+  .toast .close:hover {
+    opacity: 1;
+  }
+  
+  .toast .progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    background: #ddd;
+  }
+  
+  .toast .progress:before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    height: 100%;
+    width: 100%;
+    background-color: #4caf50;
+  }
+  
+  .toast .progress.active:before {
+    animation: progress 5s linear forwards;
+  }
+  
+  @keyframes progress {
+    100% {
+      right: 100%;
+    }
+  }
+  
+  /* Alerta de error */
+  .mi_alerta {
+    border-left-color: #f44336;
+  }
+  
+  .mi_alerta .check {
+    background-color: #f44336;
+  }
+  
+  .mi_alerta .progress:before {
+    background-color: #f44336;
+  }
+  
+  @media (max-width: 576px) {
+    .toast {
+      width: 90%;
+      right: 5%;
+      margin: 0 auto;
+      top: 20px;
+    }
+  }
+</style>

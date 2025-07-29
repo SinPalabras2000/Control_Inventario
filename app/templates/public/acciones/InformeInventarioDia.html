@@ -1,0 +1,267 @@
+{% extends 'public/base_inventario.html' %}
+{% block title %}Consulta Inventario Diario{% endblock %}
+
+{% block body %}
+<div class="container">
+    <!-- Estilos personalizados -->
+    <style>
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .table th {
+            white-space: normal !important;
+            word-wrap: break-word;
+            vertical-align: middle;
+            text-align: center;
+            font-size: 0.875rem;
+            line-height: 1.2;
+        }
+        .col-resaltada {
+            background-color: #e8f4ff !important;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        .auth-icon {
+            font-size: 3rem;
+            color: #0d6efd;
+            margin-bottom: 1rem;
+        }
+    </style>
+    
+    <!-- Modal de autenticación -->
+    <div id="authModal" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Autenticación Requerida</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <i class="bi bi-shield-lock auth-icon"></i>
+                    <h4 class="mb-3">Acceso Restringido</h4>
+                    <p class="mb-4">Ingrese la credencial de administrador para acceder al informe de inventario.</p>
+                    <div class="form-floating mb-3">
+                        <input type="password" class="form-control" id="adminPassword" placeholder="Contraseña">
+                        <label for="adminPassword">Contraseña</label>
+                    </div>
+                    <div id="authError" class="alert alert-danger d-none">Credencial incorrecta. Intente nuevamente.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="authSubmit">Verificar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="contentContainer" class="form-container d-none">
+            <h2 class="mb-4 text-center">Consulta de Inventario Diario</h2>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <!-- Formulario -->
+                    <form method="POST" action="{{ url_for('ConsultaInventarioxDia') }}">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-6 col-12">
+                                <label for="fecha" class="form-label">Selecciona una fecha:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar3"></i></span>
+                                    <input type="date" class="form-control" name="FechaDiaInv" id="FechaDiaInv" value="{{ FechaDiaInv }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-12 d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-search me-2"></i>Consultar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if miData is not none %}
+                {% if miData|length > 0 %}
+                    <!-- Buscador y Exportar -->
+                    <div class="row mt-4 mb-3 align-items-center">
+                        <div class="col-md-6 mb-2 mb-md-0">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" id="filtroMateriaPrima" class="form-control" placeholder="Buscar Materia Prima...">
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <button class="btn btn-success" onclick="exportTableToExcel('tablaInventario', 'inventario_diario')">
+                                <i class="bi bi-file-earmark-excel me-2"></i>Exportar a Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Tabla -->
+                    <div class="card shadow-sm">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover align-middle mb-0" id="tablaInventario">
+                                    <thead class="table-dark text-center">
+                                        <tr>
+                                            <th scope="col">Cod. MP</th>
+                                            <th scope="col">Materia Prima</th>
+                                            <th scope="col">Inv.<br>Preparación</th>
+                                            <th scope="col">Inv.<br>Bodega</th>
+                                            <th scope="col">(Preparación<br>+ Bodega)</th>
+                                            <th scope="col">Saldo<br>Sys</th>
+                                            <th scope="col">Dif.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for Inv in miData %}
+                                        <tr class="{% if Inv.Diferencia != 0 %}table-danger{% endif %}">
+                                            <td class="text-center">{{ Inv.CodMPSys }}</td>
+                                            <td>{{ Inv.Nombre }}</td>
+                                            <td class="text-end">{{ "%.1f"|format(Inv.InvPreparacion) }}</td>
+                                            <td class="text-end">{{ "%.1f"|format(Inv.InvBodega) }}</td>
+                                            <td class="text-end col-resaltada">{{ "%.1f"|format(Inv.InvFisico) }}</td>
+                                            <td class="text-end col-resaltada">{{ "%.1f"|format(Inv.SaldoActual) }}</td>
+                                            <td class="text-end {% if Inv.Diferencia != 0 %}text-danger fw-bold{% endif %}">
+                                                {{ "%.1f"|format(Inv.Diferencia) }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mt-4 text-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        No hay registros para la fecha seleccionada.
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Contenedor de login (se muestra inicialmente) -->
+    <div id="loginContainer" class="login-container text-center">
+        <i class="bi bi-shield-lock auth-icon"></i>
+        <h3 class="mb-3">Acceso Restringido</h3>
+        <p class="mb-4">Ingrese la credencial de administrador para acceder al informe de inventario.</p>
+        <div class="form-floating mb-3">
+            <input type="password" class="form-control" id="adminPasswordDirect" placeholder="Contraseña">
+            <label for="adminPasswordDirect">Contraseña</label>
+        </div>
+        <div id="authErrorDirect" class="alert alert-danger d-none mb-3">Credencial incorrecta. Intente nuevamente.</div>
+        <button type="button" class="btn btn-primary btn-lg w-100" id="authSubmitDirect">
+            <i class="bi bi-unlock me-2"></i>Acceder
+        </button>
+    </div>
+
+    <!-- JS para exportar, buscar y autenticación -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Verificar si ya está autenticado (usando sessionStorage)
+            const isAuthenticated = sessionStorage.getItem('inventoryAuth') === 'true';
+            if (isAuthenticated) {
+                document.getElementById('loginContainer').classList.add('d-none');
+                document.getElementById('contentContainer').classList.remove('d-none');
+            }
+            
+            // Autenticación directa
+            document.getElementById('authSubmitDirect').addEventListener('click', function() {
+                checkAuth('adminPasswordDirect', 'authErrorDirect');
+            });
+            
+            // Autenticación desde modal
+            document.getElementById('authSubmit').addEventListener('click', function() {
+                checkAuth('adminPassword', 'authError');
+            });
+            
+            // Función para verificar credencial
+            function checkAuth(inputId, errorId) {
+                const password = document.getElementById(inputId).value;
+                // Verificar contra la credencial almacenada
+                fetch('/static/assets/admin_credentials.txt')
+                    .then(response => response.text())
+                    .then(storedPassword => {
+                        if (password.trim() === storedPassword.trim()) {
+                            // Guardar estado de autenticación
+                            sessionStorage.setItem('inventoryAuth', 'true');
+                            // Mostrar contenido
+                            document.getElementById('loginContainer').classList.add('d-none');
+                            document.getElementById('contentContainer').classList.remove('d-none');
+                            // Si estamos en modal, cerrarlo
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+                            if (modal) modal.hide();
+                        } else {
+                            // Mostrar error
+                            document.getElementById(errorId).classList.remove('d-none');
+                            setTimeout(() => {
+                                document.getElementById(errorId).classList.add('d-none');
+                            }, 3000);
+                        }
+                    });
+            }
+            
+            // Filtro por Materia Prima
+            const input = document.getElementById("filtroMateriaPrima");
+            if (input) {
+                input.addEventListener("keyup", function () {
+                    const filtro = input.value.toLowerCase();
+                    const filas = document.querySelectorAll("#tablaInventario tbody tr");
+
+                    filas.forEach(row => {
+                        const nombre = row.children[1].textContent.toLowerCase();
+                        row.style.display = nombre.includes(filtro) ? '' : 'none';
+                    });
+                });
+            }
+
+            // Permitir presionar Enter en el campo de contraseña
+            document.getElementById('adminPasswordDirect').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('authSubmitDirect').click();
+                }
+            });
+        });
+
+        // Exportar con todas las filas, luego restaurar filtro
+        function exportTableToExcel(tableID, filename = '') {
+            const tableSelect = document.getElementById(tableID);
+            const rows = tableSelect.querySelectorAll("tbody tr");
+
+            // Mostrar todas las filas antes de exportar
+            rows.forEach(row => row.style.display = '');
+
+            // Generar Excel
+            const dataType = 'application/vnd.ms-excel';
+            const tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+            filename = filename ? filename + '.xls' : 'reporte.xls';
+
+            const downloadLink = document.createElement("a");
+            document.body.appendChild(downloadLink);
+
+            if (navigator.msSaveOrOpenBlob) {
+                const blob = new Blob(['\ufeff', tableHTML], { type: dataType });
+                navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+                downloadLink.download = filename;
+                downloadLink.click();
+            }
+
+            // Reaplicar filtro después de exportar
+            const filtro = document.getElementById("filtroMateriaPrima").value.toLowerCase();
+            rows.forEach(row => {
+                const nombre = row.children[1].textContent.toLowerCase();
+                row.style.display = nombre.includes(filtro) ? '' : 'none';
+            });
+        }
+    </script>
+{% endblock %}
